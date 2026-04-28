@@ -1,13 +1,23 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import os
+import sys
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 class SimpleNotepad(tk.Tk):
     def __init__(self):
         super().__init__()
         
         # ウィンドウの基本設定
-        self.title("Simple Notepad")
+        self.title("T_E")
+        icon_path = resource_path("file_icon.ico")
+        if os.path.exists(icon_path):
+            self.iconbitmap(icon_path)
         self.geometry("900x600")
         self.minsize(400, 300)
         
@@ -31,6 +41,11 @@ class SimpleNotepad(tk.Tk):
         self.setup_bindings()
         self.update_char_count()
         self.set_dark_titlebar(self)
+        
+        if len(sys.argv) > 1:
+            file_to_open = sys.argv[1]
+            if os.path.isfile(file_to_open):
+                self.after(50, lambda: self.load_file(file_to_open))
         
     def set_dark_titlebar(self, window):
         try:
@@ -132,7 +147,7 @@ class SimpleNotepad(tk.Tk):
         self.text_area.delete("1.0", tk.END)
         self.current_file = None
         self.encoding_var.set("UTF-8")
-        self.title("Simple Notepad - 新規ファイル")
+        self.title("T_E - 新規ファイル")
         self.update_char_count()
         
     def open_file(self):
@@ -140,6 +155,9 @@ class SimpleNotepad(tk.Tk):
         if not filepath:
             return
             
+        self.load_file(filepath)
+        
+    def load_file(self, filepath):
         # 複数エンコーディングの読み込みフォールバック
         encodings_to_try = ["utf-8", "cp932", "euc-jp"] # cp932はWindowsのShift_JIS
         content = None
@@ -170,7 +188,7 @@ class SimpleNotepad(tk.Tk):
         elif used_enc == "euc-jp":
             self.encoding_var.set("EUC-JP")
             
-        self.title(f"Simple Notepad - {os.path.basename(filepath)}")
+        self.title(f"T_E - {os.path.basename(filepath)}")
         self.update_char_count()
         
     def save_file(self):
@@ -196,7 +214,7 @@ class SimpleNotepad(tk.Tk):
         try:
             with open(filepath, "w", encoding=target_enc) as f:
                 f.write(content)
-            self.title(f"Simple Notepad - {os.path.basename(filepath)}")
+            self.title(f"T_E - {os.path.basename(filepath)}")
             # 保存完了のポップアップはシンプルさを損なうためステータスバーを更新するか省略します
         except Exception as e:
             messagebox.showerror("保存エラー", f"ファイルの保存に失敗しました:\n{e}")
