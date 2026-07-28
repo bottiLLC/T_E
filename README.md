@@ -42,6 +42,17 @@ uv sync
 uv run python main.py
 ```
 
+### 📦 スタンドアロン実行ファイルのビルド (1フォルダ形式 / exe化)
+
+Pythonがインストールされていない環境向けに、単一フォルダ形式の配布用 `exe` をビルドできます。
+
+```bash
+# PyInstallerによる1フォルダ形式(onedir)ビルド
+uv run pyinstaller --noconfirm simple_notepad.spec
+```
+
+ビルド成功後、`dist/simple_notepad/` フォルダ内に `simple_notepad.exe` および必要な依存ファイル群が生成されます。
+
 ---
 
 ## 📁 プロジェクト構造
@@ -56,6 +67,7 @@ T_E/
 │       └── text_service.py   # 文字数カウント・検索置換ロジック
 ├── tests/                    # ユニットテスト & Hypothesis ファジングテスト
 ├── simple_notepad.py         # GUI プレゼンテーション層 (Tkinter)
+├── simple_notepad.spec       # PyInstaller ビルド定義仕様
 ├── main.py                   # アプリケーションエントリーポイント
 ├── LICENSE                   # GNU General Public License v3.0 (GPL-3.0)
 ├── pyproject.toml            # プロジェクト定義（Single Source of Truth）

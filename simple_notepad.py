@@ -5,6 +5,12 @@ from pathlib import Path
 from tkinter import filedialog, messagebox
 from typing import Any
 
+# Redirect stdout/stderr if None (PyInstaller --noconsole mode)
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, "w", encoding="utf-8")  # noqa: SIM115
+if sys.stderr is None:
+    sys.stderr = open(os.devnull, "w", encoding="utf-8")  # noqa: SIM115
+
 # Ensure src module resolution
 src_dir = str(Path(__file__).parent / "src")
 if src_dir not in sys.path:

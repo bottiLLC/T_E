@@ -1,5 +1,13 @@
+import os
+import sys
+
 import structlog
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, "w", encoding="utf-8")  # noqa: SIM115
+if sys.stderr is None:
+    sys.stderr = open(os.devnull, "w", encoding="utf-8")  # noqa: SIM115
 
 log = structlog.get_logger()
 
