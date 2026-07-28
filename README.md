@@ -57,6 +57,7 @@ T_E/
 ├── tests/                    # ユニットテスト & Hypothesis ファジングテスト
 ├── simple_notepad.py         # GUI プレゼンテーション層 (Tkinter)
 ├── main.py                   # アプリケーションエントリーポイント
+├── LICENSE                   # GNU General Public License v3.0 (GPL-3.0)
 ├── pyproject.toml            # プロジェクト定義（Single Source of Truth）
 ├── run.vbs                   # Windows用サイレント起動スクリプト (画面なし)
 ├── run.bat                   # Windows用環境構築・起動スクリプト
@@ -79,3 +80,9 @@ uv run mypy .
 # 自動テストおよびカバレッジ測定の実行 (現在 92% Coverage)
 uv run pytest -v --cov=src
 ```
+
+---
+
+## 📄 ライセンス
+
+本プロジェクトは [GNU General Public License v3.0 (GPL-3.0)](file:///e:/Python/T_E/LICENSE) のもとで公開されています。詳細については [LICENSE](file:///e:/Python/T_E/LICENSE) ファイルをご参照ください。
