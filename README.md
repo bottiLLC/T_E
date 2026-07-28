@@ -27,7 +27,8 @@
 
 ### ワンクリック起動（推奨）
 
-- **Windows**: [run.bat](file:///e:/Python/T_E/run.bat) をダブルクリック
+- **Windows (黒い画面なし)**: [run.vbs](file:///e:/Python/T_E/run.vbs) をダブルクリック *(推奨)*
+- **Windows (コンソール表示)**: [run.bat](file:///e:/Python/T_E/run.bat) をダブルクリック
 - **Mac / Linux**: [run.command](file:///e:/Python/T_E/run.command) をダブルクリック  
   *(※初回のみターミナルで `chmod +x run.command` を実行してください)*
 

@@ -66,7 +66,7 @@ echo.
 echo [INFO] Launching %ENTRY_POINT%...
 echo.
 
-uv run python "%ENTRY_POINT%"
+uv run pythonw "%ENTRY_POINT%"
 
 if %errorlevel% neq 0 (
     echo.
