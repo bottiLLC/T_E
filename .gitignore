@@ -33,3 +33,9 @@ venv.bak/
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Test & Coverage artifacts
+.coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

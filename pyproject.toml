@@ -1,10 +1,49 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "t-e"
 version = "0.1.0"
-description = "Add your description here"
+description = "T_E Text Editor Application"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.14"
 dependencies = [
     "pillow>=12.2.0",
+    "pydantic>=2.12.0",
+    "pydantic-settings>=2.12.0",
     "pyinstaller>=6.20.0",
+    "structlog>=24.4.0",
+    "tenacity>=9.1.4",
 ]
+
+[dependency-groups]
+dev = [
+    "hypothesis>=6.100.0",
+    "mypy>=1.10.0",
+    "pytest>=8.2.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=5.0.0",
+    "pytest-mock>=3.14.0",
+    "respx>=0.21.0",
+    "ruff>=0.4.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+markers = [
+    "fuzz: Mark tests as SBR chaos fuzzing tests",
+]
+
+[tool.mypy]
+python_version = "3.14"
+strict = false
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
