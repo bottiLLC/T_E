@@ -70,21 +70,27 @@ class SimpleNotepad(tk.Tk):
                 self.after(50, lambda: self.load_file(file_to_open))
 
     def set_dark_titlebar(self, window: tk.Tk | tk.Toplevel) -> None:
+        if sys.platform != "win32":
+            return
         try:
             import ctypes
 
             window.update()
-            hwnd = ctypes.windll.user32.GetParent(window.winfo_id())
+            windll = getattr(ctypes, "windll", None)
+            if windll is None:
+                return
+
+            hwnd = windll.user32.GetParent(window.winfo_id())
             value = ctypes.c_int(1)
-            ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, 20, ctypes.byref(value), ctypes.sizeof(value))
-            ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, 19, ctypes.byref(value), ctypes.sizeof(value))
+            windll.dwmapi.DwmSetWindowAttribute(hwnd, 20, ctypes.byref(value), ctypes.sizeof(value))
+            windll.dwmapi.DwmSetWindowAttribute(hwnd, 19, ctypes.byref(value), ctypes.sizeof(value))
 
             bg = self.bg_top
             r = int(bg[1:3], 16)
             g = int(bg[3:5], 16)
             b = int(bg[5:7], 16)
             color = ctypes.c_int((b << 16) | (g << 8) | r)
-            ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, 35, ctypes.byref(color), ctypes.sizeof(color))
+            windll.dwmapi.DwmSetWindowAttribute(hwnd, 35, ctypes.byref(color), ctypes.sizeof(color))
         except Exception:  # noqa: BLE001, S110
             pass
 
