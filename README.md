@@ -7,12 +7,12 @@
 
 ## 🌟 主な特徴
 
-- **モダンなダークモードデザイン**: Windows 10/11 のダークタイトルバーに連動した洗練されたUI。
+- **モダンなダークモードUI**: Windows 10/11 のダークタイトルバーに完全追従する洗練されたデザイン。
+- **サイレント・ワンクリック起動**: `run.vbs` を使用し、黒いコンソール画面（ターミナル）を開かずにバックグラウンドで起動。
 - **安心の未保存保護機能**: 文書変更の自動追跡（タイトルバーの `*` マーク表記）および、終了・ファイル切り替え時の保存確認ダイアログ。
-- **スマートな文字コード対応**: UTF-8 / Shift_JIS (cp932) / EUC-JP の自動読み込み判別と、指定文字コードでの保存機能。
+- **スマートな文字コード＆改行コード対応**: UTF-8 / Shift_JIS (cp932) / EUC-JP の自動読み込み判別と、元の改行コードの正確な保持。
 - **テキスト操作サービス**: リアルタイム文字数カウント、前後ループ対応の文字列検索および一括置換機能。
-- **ロバストな構造**: `structlog` による構造化ログ記録、および Pydantic V2 設定管理。
-- **自動環境構築ランチャー**: `uv` パッケージマネージャーと連携し、ダブルクリック一発で `.venv` の作成・同期から起動までを自動化。
+- **ロバストな構造と自動テスト**: `structlog` 構造化ログ、Pydantic V2 設定管理、Hypothesis ファジングテストを含む 92% の高テストカバレッジ。
 
 ---
 
@@ -35,7 +35,7 @@
 ### コマンドラインからの起動
 
 ```bash
-# 依存パッケージのインストールと同期
+# 依存パッケージのインストールと環境同期
 uv sync
 
 # アプリケーションの起動
@@ -48,32 +48,34 @@ uv run python main.py
 
 ```text
 T_E/
+├── .github/workflows/ci.yml  # GitHub Actions CI/CD パイプライン
 ├── src/t_e/
-│   ├── config.py           # Pydantic V2 & structlog 設定管理
+│   ├── config.py             # Pydantic V2 & structlog 設定管理
 │   └── services/
-│       ├── file_service.py # 文字コード判別・ファイル入出力サービス
-│       └── text_service.py # 文字数カウント・検索置換ロジック
-├── tests/                  # ユニットテスト & Hypothesis ファジングテスト
-├── simple_notepad.py       # GUI プレゼンテーション層 (Tkinter)
-├── main.py                 # エントリーポイント
-├── pyproject.toml          # シングルソース・オブ・トゥルース（プロジェクト定義）
-├── run.bat                 # Windows用自動環境構築・起動スクリプト
-└── run.command             # Mac/Linux用自動環境構築・起動スクリプト
+│       ├── file_service.py   # 文字コード判別・ファイル入出力サービス
+│       └── text_service.py   # 文字数カウント・検索置換ロジック
+├── tests/                    # ユニットテスト & Hypothesis ファジングテスト
+├── simple_notepad.py         # GUI プレゼンテーション層 (Tkinter)
+├── main.py                   # アプリケーションエントリーポイント
+├── pyproject.toml            # プロジェクト定義（Single Source of Truth）
+├── run.vbs                   # Windows用サイレント起動スクリプト (画面なし)
+├── run.bat                   # Windows用環境構築・起動スクリプト
+└── run.command               # Mac/Linux用環境構築・起動スクリプト
 ```
 
 ---
 
-## 🧪 開発およびテスト
+## 🧪 開発およびテスト品質保証
 
-本プロジェクトは、`ruff` (静的解析), `mypy` (厳格な型チェック), および `pytest` / `hypothesis` による継続的品質保証を行っています。
+本プロジェクトは、`ruff` (静的解析), `mypy` (厳格な型チェック), および `pytest` / `hypothesis` (ファジング) による継続的品質保証を行っています。
 
 ```bash
 # 静的解析とコードフォーマット確認
 uv run ruff check .
 
-# 型チェック
+# 厳格な型チェック
 uv run mypy .
 
-# 自動テストおよびカバレッジ測定の実行
+# 自動テストおよびカバレッジ測定の実行 (現在 92% Coverage)
 uv run pytest -v --cov=src
 ```
