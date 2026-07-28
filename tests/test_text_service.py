@@ -10,6 +10,7 @@ def test_count_characters() -> None:
     assert TextService.count_characters("abc") == 3
     assert TextService.count_characters("あいうえお") == 5
     assert TextService.count_characters("a\nb\n") == 4
+    assert TextService.count_characters("🍎✨🐍") == 3
 
 
 def test_count_lines() -> None:
@@ -17,6 +18,7 @@ def test_count_lines() -> None:
     assert TextService.count_lines("hello") == 1
     assert TextService.count_lines("hello\nworld") == 2
     assert TextService.count_lines("a\nb\nc\n") == 4
+    assert TextService.count_lines("line1\r\nline2") == 2
 
 
 def test_replace_all() -> None:
