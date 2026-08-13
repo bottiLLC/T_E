@@ -1,6 +1,6 @@
 # T_E - Simple & Modern Text Editor
 
-**T_E** は、Python 3.14 と Tkinter で構築された、高速かつモダンなダークモード対応テキストエディタです。  
+**T_E** は、Python 3.12 と Tkinter で構築された、高速かつモダンなダークモード対応テキストエディタです。  
 関心事の分離 (Separation of Concerns) に基づく強固なサービスアーキテクチャ、多重文字コード自動判別、未保存変更の安全な保護機能を備えています。
 
 ---
@@ -18,7 +18,7 @@
 
 ## 🛠️ 動作環境
 
-- **Python**: 3.14 以上
+- **Python**: 3.12 以上 (※ Windows 11 の **Smart App Control (スマート アプリ コントロール)** 有効環境下では、未署名 DLL ブロック回避のため、Tcl/Tk DLL が公式にデジタル署名された **Python 3.12 または 3.13 の安定版公式インストーラー経由のインストール** を強く推奨します)
 - **パッケージマネージャー**: [uv](https://astral.sh/uv) (Astral)
 
 ---
@@ -48,10 +48,10 @@ Pythonがインストールされていない環境向けに、単一フォル�
 
 ```bash
 # PyInstallerによる1フォルダ形式(onedir)ビルド
-uv run pyinstaller --noconfirm simple_notepad.spec
+uv run pyinstaller --noconfirm T_E.spec
 ```
 
-ビルド成功後、`dist/simple_notepad/` フォルダ内に `simple_notepad.exe` および必要な依存ファイル群が生成されます。
+ビルド成功後、`dist/T_E/` フォルダ内に `T_E.exe` および必要な依存ファイル群が生成されます。
 
 ---
 
@@ -67,7 +67,7 @@ T_E/
 │       └── text_service.py   # 文字数カウント・検索置換ロジック
 ├── tests/                    # ユニットテスト & Hypothesis ファジングテスト
 ├── simple_notepad.py         # GUI プレゼンテーション層 (Tkinter)
-├── simple_notepad.spec       # PyInstaller ビルド定義仕様
+├── T_E.spec                  # PyInstaller ビルド定義仕様
 ├── main.py                   # アプリケーションエントリーポイント
 ├── LICENSE                   # GNU General Public License v3.0 (GPL-3.0)
 ├── pyproject.toml            # プロジェクト定義（Single Source of Truth）
