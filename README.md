@@ -3,7 +3,7 @@
 # T_E
 
 ## Overview
-T_E is a lightweight, high-performance desktop text editor built with Python 3.14 and Tkinter, featuring automatic character encoding detection and native Windows dark mode integration. It provides deterministic filesystem I/O, robust unsaved buffer safety interlocks, and standardized data protection.
+T_E は、Python 3.14 と Tkinter で構築された、多重文字コード自動判別および Windows ネイティブダークモード対応の高速デスクトップテキストエディタです。決定論的なファイル I/O、未保存バッファの保護インターロック、および標準化されたデータ整合性保護機能を提供します。
 
 ## Quick Start (TL;DR)
 ```bash
@@ -13,24 +13,24 @@ uv run pytest -v -m "not fuzz" --cov=src --cov-branch --cov-report=term-missing
 ```
 
 ## Architecture & Features
-- **Separation of Concerns Service Layer**: Core transformations isolated in stateless pure services (`FileService` for multi-encoding I/O and `TextService` for character/line metrics and replacements).
-- **Multi-Encoding Auto-Detection**: Seamless bidirectional file reading and writing across UTF-8, Shift_JIS (CP932), and EUC-JP encodings.
-- **Buffer Safety Interlocks**: Active buffer change tracking with visual indicators (`*`) and mandatory save confirmations upon window close or document switching.
-- **Standardized Data Protection**: Project-root isolated `backup_manager.py` implementing atomic ZIP generation, `testzip()` integrity verification, and configurable target directories.
-- **Cross-Platform Launcher Automation**: Zero-configuration bootstrapping via `run.bat` (Windows CRLF) and `run.command` (macOS/Linux LF) with automatic virtual environment provisioning.
+- **関心事の分離に基づくサービス層**: コア変換処理をステートレスな純粋サービス（文字コード判別入出力 `FileService`、文字数・行数計算および文字列置換 `TextService`）として厳格に分離。
+- **多重文字コード自動判別**: UTF-8、Shift_JIS（CP932）、EUC-JP 間の安全な双方向ファイル読み込みおよび書き込みに対応。
+- **バッファ安全インターロック**: 未保存変更の自動追跡（タイトルバーの `*` 表記）および、ウィンドウ終了・新規作成時の保存確認ダイアログによるデータ損失防止。
+- **標準データ保護モジュール**: プロジェクト直下の `backup_manager.py` によるアトミックな一時 ZIP 生成、`testzip()` 破損検証、および保存先設定の永続化。
+- **自動起動スクリプト**: `run.bat`（Windows CRLF）および `run.command`（macOS/Linux LF）による、仮想環境自動プロビジョニング付きワンクリック起動。
 
 ## Environment Variables
-| Variable | Default Value | Description |
+| 環境変数名 | デフォルト値 | 説明 |
 | :--- | :--- | :--- |
-| `BACKUP_DIR` | `./backups` | Override path for integrity-verified backup archive output directory. |
-| `APP_TITLE` | `T_E` | Custom display title prefix for application window. |
-| `DEFAULT_ENCODING` | `UTF-8` | Default character encoding selected for new document buffers. |
-| `LOG_LEVEL` | `INFO` | Structured logging verbosity level (`DEBUG`, `INFO`, `WARNING`, `ERROR`). |
+| `BACKUP_DIR` | `./backups` | 整合性検証付きバックアップ ZIP アーカイブの出力先ディレクトリ。 |
+| `APP_TITLE` | `T_E` | アプリケーションウィンドウのタイトル表示プレフィックス。 |
+| `DEFAULT_ENCODING` | `UTF-8` | 新規作成バッファに適用されるデフォルトの文字コード。 |
+| `LOG_LEVEL` | `INFO` | structlog による構造化ログの出力レベル (`DEBUG`, `INFO`, `WARNING`, `ERROR`)。 |
 
 ## Limits & Known Trade-offs
-- **Single Tab Editing**: Currently constrained to single-document active editing per process window; multi-tab document buffering scheduled for future iteration.
-- **Large File Streaming**: Files are currently ingested into memory in a single read pass; streaming chunks for files exceeding 100MB remains out-of-scope for the present architecture.
-- **Rich Text / Syntax Highlighting**: Focused strictly on plaintext editing without AST token syntax coloring.
+- **単一ドキュメント編集の制約**: 現在は1プロセスあたり1ファイルの編集に制限されており、タブによる複数ドキュメント同時編集は次期マイレージでの対応予定。
+- **大容量ファイルの一括メモリ読み込み**: 100MB を超える超巨大テキストのストリーミング分割読み込みは現行アーキテクチャのスコープ外。
+- **シンタックスハイライト未対応**: プレーンテキストの高速・軽量な編集に特化しており、プログラミング言語の構文ハイライト機能は非搭載。
 
 ---
 
