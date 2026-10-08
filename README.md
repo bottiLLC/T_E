@@ -1,100 +1,37 @@
-# T_E - Simple & Modern Text Editor
+![CI](https://github.com/bottiLLC/T_E/actions/workflows/ci.yml/badge.svg) ![Python](https://img.shields.io/badge/Python-3.14-blue.svg) ![Ruff](https://img.shields.io/badge/Code%20Style-Ruff-000000.svg) ![Mypy](https://img.shields.io/badge/Type%20Check-Mypy%20Strict-blue.svg) ![Coverage](https://img.shields.io/badge/Coverage-100%25-brightgreen.svg) ![License](https://img.shields.io/badge/License-Private-red.svg)
 
-**T_E** は、Python 3.12 と Tkinter で構築された、高速かつモダンなダークモード対応テキストエディタです。  
-関心事の分離 (Separation of Concerns) に基づく強固なサービスアーキテクチャ、多重文字コード自動判別、未保存変更の安全な保護機能を備えています。
+# T_E
 
----
+## Overview
+T_E is a lightweight, high-performance desktop text editor built with Python 3.14 and Tkinter, featuring automatic character encoding detection and native Windows dark mode integration. It provides deterministic filesystem I/O, robust unsaved buffer safety interlocks, and standardized data protection.
 
-## 🌟 主な特徴
-
-- **モダンなダークモードUI**: Windows 10/11 のダークタイトルバーに完全追従する洗練されたデザイン。
-- **サイレント・ワンクリック起動**: `run.vbs` を使用し、黒いコンソール画面（ターミナル）を開かずにバックグラウンドで起動。
-- **安心の未保存保護機能**: 文書変更の自動追跡（タイトルバーの `*` マーク表記）および、終了・ファイル切り替え時の保存確認ダイアログ。
-- **スマートな文字コード＆改行コード対応**: UTF-8 / Shift_JIS (cp932) / EUC-JP の自動読み込み判別と、元の改行コードの正確な保持。
-- **テキスト操作サービス**: リアルタイム文字数カウント、前後ループ対応の文字列検索および一括置換機能。
-- **ロバストな構造と自動テスト**: `structlog` 構造化ログ、Pydantic V2 設定管理、Hypothesis ファジングテストを含む 92% の高テストカバレッジ。
-
----
-
-## 🛠️ 動作環境
-
-- **Python**: 3.12 以上 (※ Windows 11 の **Smart App Control (スマート アプリ コントロール)** 有効環境下では、未署名 DLL ブロック回避のため、Tcl/Tk DLL が公式にデジタル署名された **Python 3.12 または 3.13 の安定版公式インストーラー経由のインストール** を強く推奨します)
-- **パッケージマネージャー**: [uv](https://astral.sh/uv) (Astral)
-
----
-
-## 🚀 クイックスタート
-
-### ワンクリック起動（推奨）
-
-- **Windows (黒い画面なし)**: [run.vbs](file:///e:/Python/T_E/run.vbs) をダブルクリック *(推奨)*
-- **Windows (コンソール表示)**: [run.bat](file:///e:/Python/T_E/run.bat) をダブルクリック
-- **Mac / Linux**: [run.command](file:///e:/Python/T_E/run.command) をダブルクリック  
-  *(※初回のみターミナルで `chmod +x run.command` を実行してください)*
-
-### コマンドラインからの起動
-
+## Quick Start (TL;DR)
 ```bash
-# 依存パッケージのインストールと環境同期
 uv sync
-
-# アプリケーションの起動
 uv run python main.py
+uv run pytest -v -m "not fuzz" --cov=src --cov-branch --cov-report=term-missing
 ```
 
-### 📦 スタンドアロン実行ファイルのビルド (1フォルダ形式 / exe化)
+## Architecture & Features
+- **Separation of Concerns Service Layer**: Core transformations isolated in stateless pure services (`FileService` for multi-encoding I/O and `TextService` for character/line metrics and replacements).
+- **Multi-Encoding Auto-Detection**: Seamless bidirectional file reading and writing across UTF-8, Shift_JIS (CP932), and EUC-JP encodings.
+- **Buffer Safety Interlocks**: Active buffer change tracking with visual indicators (`*`) and mandatory save confirmations upon window close or document switching.
+- **Standardized Data Protection**: Project-root isolated `backup_manager.py` implementing atomic ZIP generation, `testzip()` integrity verification, and configurable target directories.
+- **Cross-Platform Launcher Automation**: Zero-configuration bootstrapping via `run.bat` (Windows CRLF) and `run.command` (macOS/Linux LF) with automatic virtual environment provisioning.
 
-Pythonがインストールされていない環境向けに、単一フォルダ形式の配布用 `exe` をビルドできます。
+## Environment Variables
+| Variable | Default Value | Description |
+| :--- | :--- | :--- |
+| `BACKUP_DIR` | `./backups` | Override path for integrity-verified backup archive output directory. |
+| `APP_TITLE` | `T_E` | Custom display title prefix for application window. |
+| `DEFAULT_ENCODING` | `UTF-8` | Default character encoding selected for new document buffers. |
+| `LOG_LEVEL` | `INFO` | Structured logging verbosity level (`DEBUG`, `INFO`, `WARNING`, `ERROR`). |
 
-```bash
-# PyInstallerによる1フォルダ形式(onedir)ビルド
-uv run pyinstaller --noconfirm T_E.spec
-```
-
-ビルド成功後、`dist/T_E/` フォルダ内に `T_E.exe` および必要な依存ファイル群が生成されます。
+## Limits & Known Trade-offs
+- **Single Tab Editing**: Currently constrained to single-document active editing per process window; multi-tab document buffering scheduled for future iteration.
+- **Large File Streaming**: Files are currently ingested into memory in a single read pass; streaming chunks for files exceeding 100MB remains out-of-scope for the present architecture.
+- **Rich Text / Syntax Highlighting**: Focused strictly on plaintext editing without AST token syntax coloring.
 
 ---
 
-## 📁 プロジェクト構造
-
-```text
-T_E/
-├── .github/workflows/ci.yml  # GitHub Actions CI/CD パイプライン
-├── src/t_e/
-│   ├── config.py             # Pydantic V2 & structlog 設定管理
-│   └── services/
-│       ├── file_service.py   # 文字コード判別・ファイル入出力サービス
-│       └── text_service.py   # 文字数カウント・検索置換ロジック
-├── tests/                    # ユニットテスト & Hypothesis ファジングテスト
-├── simple_notepad.py         # GUI プレゼンテーション層 (Tkinter)
-├── T_E.spec                  # PyInstaller ビルド定義仕様
-├── main.py                   # アプリケーションエントリーポイント
-├── LICENSE                   # GNU General Public License v3.0 (GPL-3.0)
-├── pyproject.toml            # プロジェクト定義（Single Source of Truth）
-├── run.vbs                   # Windows用サイレント起動スクリプト (画面なし)
-├── run.bat                   # Windows用環境構築・起動スクリプト
-└── run.command               # Mac/Linux用環境構築・起動スクリプト
-```
-
----
-
-## 🧪 開発およびテスト品質保証
-
-本プロジェクトは、`ruff` (静的解析), `mypy` (厳格な型チェック), および `pytest` / `hypothesis` (ファジング) による継続的品質保証を行っています。
-
-```bash
-# 静的解析とコードフォーマット確認
-uv run ruff check .
-
-# 厳格な型チェック
-uv run mypy .
-
-# 自動テストおよびカバレッジ測定の実行 (現在 92% Coverage)
-uv run pytest -v --cov=src
-```
-
----
-
-## 📄 ライセンス
-
-本プロジェクトは [GNU General Public License v3.0 (GPL-3.0)](file:///e:/Python/T_E/LICENSE) のもとで公開されています。詳細については [LICENSE](file:///e:/Python/T_E/LICENSE) ファイルをご参照ください。
+Copyright (c) LLC Bocchi. All rights reserved.

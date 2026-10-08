@@ -40,3 +40,8 @@ Thumbs.db
 .mypy_cache/
 .ruff_cache/
 *.egg-info/
+
+# Dynamic data and backups
+data/*
+!data/.gitkeep
+backups/

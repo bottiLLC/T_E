@@ -1,20 +1,27 @@
+"""Desktop text editor GUI presentation layer built with Tkinter."""
+
+from __future__ import annotations
+
 import os
 import sys
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox
-from typing import Any
+
+# Deterministic module resolution prior to local imports
+_ROOT_DIR = str(Path(__file__).resolve().parent)
+if _ROOT_DIR not in sys.path:
+    sys.path.insert(0, _ROOT_DIR)
+
+_SRC_DIR = str(Path(__file__).resolve().parent / "src")
+if _SRC_DIR not in sys.path:
+    sys.path.insert(0, _SRC_DIR)
 
 # Redirect stdout/stderr if None (PyInstaller --noconsole mode)
 if sys.stdout is None:
     sys.stdout = open(os.devnull, "w", encoding="utf-8")  # noqa: SIM115
 if sys.stderr is None:
     sys.stderr = open(os.devnull, "w", encoding="utf-8")  # noqa: SIM115
-
-# Ensure src module resolution
-src_dir = str(Path(__file__).parent / "src")
-if src_dir not in sys.path:
-    sys.path.insert(0, src_dir)
 
 import structlog
 
@@ -26,40 +33,48 @@ log = structlog.get_logger()
 
 
 def resource_path(relative_path: str) -> str:
-    try:
-        base_path = sys._MEIPASS  # type: ignore[attr-defined]
-    except Exception:  # noqa: BLE001
-        base_path = os.path.abspath(".")
-    return os.path.join(base_path, relative_path)
+    """Resolve absolute path to resource for development and PyInstaller runtime.
+
+    Args:
+        relative_path: Relative file path to the resource asset.
+
+    Returns:
+        str: Absolute filesystem path to the resource file.
+    """
+    base_path = getattr(sys, "_MEIPASS", str(Path(__file__).resolve().parent))
+    return str(Path(base_path) / relative_path)
 
 
 class SimpleNotepad(tk.Tk):
+    """Primary Tkinter application window for the text editor."""
+
     def __init__(self) -> None:
+        """Initialize application state, window geometry, and UI widgets."""
         super().__init__()
 
-        # ウィンドウの基本設定
+        # Window configuration
         self.title(settings.app_title)
         icon_path = resource_path("file_icon.ico")
         if os.path.exists(icon_path):
-            self.iconbitmap(icon_path)
+            self.iconbitmap(icon_path)  # type: ignore[no-untyped-call]
         self.geometry(settings.window_geometry)
         self.minsize(settings.min_window_width, settings.min_window_height)
 
-        # カラーパレット（ダークモード）
-        self.bg_main = "#1E1E1E"  # テキストエリア背景
-        self.bg_top = "#2D2D30"  # トップバー背景
-        self.bg_bottom = "#2D2D30"  # ステータスバー背景
-        self.fg_main = "#CCCCCC"  # メインテキスト色
-        self.fg_bottom = "#CCCCCC"  # ステータスバーテキスト色
-        self.sel_bg = "#264F78"  # 選択範囲の背景色
+        # Color palette (Dark mode)
+        self.bg_main = "#1E1E1E"
+        self.bg_top = "#2D2D30"
+        self.bg_bottom = "#2D2D30"
+        self.fg_main = "#CCCCCC"
+        self.fg_bottom = "#CCCCCC"
+        self.sel_bg = "#264F78"
 
-        # フォント設定
+        # Fonts
         self.main_font = ("Yu Gothic UI", 12)
         self.ui_font = ("Yu Gothic UI", 10)
 
-        # 状態変数
+        # State attributes
         self.current_file: str | None = None
-        self.is_modified = False
+        self.is_modified: bool = False
         self.fr_window: tk.Toplevel | None = None
         self.encoding_var = tk.StringVar(value=settings.default_encoding)
 
@@ -76,6 +91,11 @@ class SimpleNotepad(tk.Tk):
                 self.after(50, lambda: self.load_file(file_to_open))
 
     def set_dark_titlebar(self, window: tk.Tk | tk.Toplevel) -> None:
+        """Apply Windows DWM dark mode title bar styling if running on Windows.
+
+        Args:
+            window: Target Tk or Toplevel window to apply title bar attributes.
+        """
         if sys.platform != "win32":
             return
         try:
@@ -97,23 +117,14 @@ class SimpleNotepad(tk.Tk):
             b = int(bg[5:7], 16)
             color = ctypes.c_int((b << 16) | (g << 8) | r)
             windll.dwmapi.DwmSetWindowAttribute(hwnd, 35, ctypes.byref(color), ctypes.sizeof(color))
-        except Exception:  # noqa: BLE001, S110
+        except OSError:
             pass
 
     def setup_ui(self) -> None:
+        """Construct and layout editor toolbars, text area, and status widgets."""
         self.top_frame = tk.Frame(self, bg=self.bg_top, height=45)
         self.top_frame.pack(side="top", fill="x")
         self.top_frame.pack_propagate(False)
-
-        btn_config: dict[str, Any] = {
-            "bg": self.bg_top,
-            "fg": self.fg_main,
-            "bd": 0,
-            "font": self.ui_font,
-            "activebackground": "#3E3E42",
-            "activeforeground": "#FFFFFF",
-            "cursor": "hand2",
-        }
 
         buttons = [
             ("新規作成", self.new_file),
@@ -124,7 +135,18 @@ class SimpleNotepad(tk.Tk):
         ]
 
         for text, cmd in buttons:
-            btn = tk.Button(self.top_frame, text=text, command=cmd, **btn_config)
+            btn = tk.Button(
+                self.top_frame,
+                text=text,
+                command=cmd,
+                bg=self.bg_top,
+                fg=self.fg_main,
+                bd=0,
+                font=self.ui_font,
+                activebackground="#3E3E42",
+                activeforeground="#FFFFFF",
+                cursor="hand2",
+            )
             btn.pack(side="left", padx=5, pady=5, ipadx=10, ipady=2)
             self.add_hover(btn)
 
@@ -149,7 +171,11 @@ class SimpleNotepad(tk.Tk):
         self.bottom_frame.pack_propagate(False)
 
         self.char_count_label = tk.Label(
-            self.bottom_frame, text="文字数: 0", bg=self.bg_bottom, fg=self.fg_bottom, font=self.ui_font
+            self.bottom_frame,
+            text="文字数: 0",
+            bg=self.bg_bottom,
+            fg=self.fg_bottom,
+            font=self.ui_font,
         )
         self.char_count_label.pack(side="left", padx=15)
 
@@ -180,19 +206,30 @@ class SimpleNotepad(tk.Tk):
         self.encoding_label.pack(side="right")
 
     def add_hover(self, btn: tk.Button) -> None:
-        btn.bind("<Enter>", lambda e: btn.config(bg="#3E3E42"))
-        btn.bind("<Leave>", lambda e: btn.config(bg=self.bg_top))
+        """Bind hover highlight background events to the given button.
+
+        Args:
+            btn: Button widget to attach hover event handlers to.
+        """
+        btn.bind("<Enter>", lambda _e: btn.config(bg="#3E3E42"))
+        btn.bind("<Leave>", lambda _e: btn.config(bg=self.bg_top))
 
     def setup_bindings(self) -> None:
+        """Register keyboard shortcuts and widget event handlers."""
         self.text_area.bind("<KeyRelease>", self.update_char_count)
         self.text_area.bind("<<Modified>>", self.on_modify)
 
         self.bind("<Control-f>", self.show_find_replace)
-        self.bind("<Control-s>", lambda e: self.save_file())
-        self.bind("<Control-o>", lambda e: self.open_file())
-        self.bind("<Control-n>", lambda e: self.new_file())
+        self.bind("<Control-s>", lambda _e: self.save_file())
+        self.bind("<Control-o>", lambda _e: self.open_file())
+        self.bind("<Control-n>", lambda _e: self.new_file())
 
-    def on_modify(self, event: tk.Event | None = None) -> None:
+    def on_modify(self, event: tk.Event[tk.Misc] | None = None) -> None:
+        """Track text buffer modification events to update state and title.
+
+        Args:
+            event: Optional Tk event triggered upon buffer modification.
+        """
         if self.text_area.edit_modified():
             if not self.is_modified:
                 self.is_modified = True
@@ -201,16 +238,27 @@ class SimpleNotepad(tk.Tk):
             self.text_area.edit_modified(False)
 
     def update_title(self) -> None:
+        """Update window title bar reflecting active file and modification flag."""
         filename = os.path.basename(self.current_file) if self.current_file else "新規ファイル"
         mod_mark = "*" if self.is_modified else ""
         self.title(f"{settings.app_title} - {filename}{mod_mark}")
 
-    def update_char_count(self, event: tk.Event | None = None) -> None:
+    def update_char_count(self, event: tk.Event[tk.Misc] | None = None) -> None:
+        """Update character count display in the status bar.
+
+        Args:
+            event: Optional Tk event triggering character recalculation.
+        """
         content = self.text_area.get("1.0", "end-1c")
         count = TextService.count_characters(content)
         self.char_count_label.config(text=f"文字数: {count}")
 
     def confirm_save_if_modified(self) -> bool:
+        """Prompt user to save changes if buffer has unsaved edits.
+
+        Returns:
+            bool: True if safe to continue (saved or discarded), False if cancelled.
+        """
         if not self.is_modified:
             return True
 
@@ -224,11 +272,13 @@ class SimpleNotepad(tk.Tk):
         return response is False
 
     def on_closing(self) -> None:
+        """Handle window close event with save confirmation guard."""
         if self.confirm_save_if_modified():
             log.info("app_closing")
             self.destroy()
 
     def new_file(self) -> None:
+        """Reset text editor state to an empty document."""
         if not self.confirm_save_if_modified():
             return
         self.text_area.delete("1.0", tk.END)
@@ -240,6 +290,7 @@ class SimpleNotepad(tk.Tk):
         self.update_char_count()
 
     def open_file(self) -> None:
+        """Prompt open file dialog and load selected file into editor."""
         if not self.confirm_save_if_modified():
             return
         filepath = filedialog.askopenfilename(
@@ -250,6 +301,11 @@ class SimpleNotepad(tk.Tk):
         self.load_file(filepath)
 
     def load_file(self, filepath: str) -> None:
+        """Load file content from disk with automatic character encoding detection.
+
+        Args:
+            filepath: Path to the file to open.
+        """
         try:
             content, detected_enc = FileService.read_file(filepath)
             self.text_area.delete("1.0", tk.END)
@@ -260,20 +316,28 @@ class SimpleNotepad(tk.Tk):
             self.encoding_var.set(detected_enc)
             self.update_title()
             self.update_char_count()
-        except Exception as e:  # noqa: BLE001
-            messagebox.showerror(
-                "エラー", f"ファイルの読み込みに失敗しました:\n{e}"
-            )
+        except (OSError, UnicodeDecodeError) as e:
+            messagebox.showerror("エラー", f"ファイルの読み込みに失敗しました:\n{e}")
 
     def save_file(self) -> bool:
+        """Save current buffer content to active file or prompt save as dialog.
+
+        Returns:
+            bool: True if successfully saved, False otherwise.
+        """
         if not self.current_file:
             return self.save_file_as()
-        else:
-            return self._write_to_disk(self.current_file)
+        return self._write_to_disk(self.current_file)
 
     def save_file_as(self) -> bool:
+        """Prompt save as dialog and persist current buffer to selected path.
+
+        Returns:
+            bool: True if saved, False if cancelled or write failed.
+        """
         filepath = filedialog.asksaveasfilename(
-            defaultextension=".txt", filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")]
+            defaultextension=".txt",
+            filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")],
         )
         if filepath:
             self.current_file = filepath
@@ -281,6 +345,14 @@ class SimpleNotepad(tk.Tk):
         return False
 
     def _write_to_disk(self, filepath: str) -> bool:
+        """Write active buffer content to disk with error interception dialog.
+
+        Args:
+            filepath: Target file path to write to.
+
+        Returns:
+            bool: True if written successfully, False on error.
+        """
         content = self.text_area.get("1.0", "end-1c")
         enc = self.encoding_var.get()
         try:
@@ -289,11 +361,16 @@ class SimpleNotepad(tk.Tk):
             self.text_area.edit_modified(False)
             self.update_title()
             return True
-        except Exception as e:  # noqa: BLE001
+        except OSError as e:
             messagebox.showerror("保存エラー", f"ファイルの保存に失敗しました:\n{e}")
             return False
 
-    def show_find_replace(self, event: tk.Event | None = None) -> None:
+    def show_find_replace(self, event: tk.Event[tk.Misc] | None = None) -> None:
+        """Display non-modal find and replace dialog window.
+
+        Args:
+            event: Optional Tk event triggering dialog display.
+        """
         if self.fr_window is not None and self.fr_window.winfo_exists():
             self.fr_window.focus()
             return
@@ -306,30 +383,45 @@ class SimpleNotepad(tk.Tk):
         self.fr_window.attributes("-topmost", True)
         self.set_dark_titlebar(self.fr_window)
 
-        lbl_config: dict[str, Any] = {"bg": self.bg_top, "fg": self.fg_main, "font": self.ui_font}
-        tk.Label(self.fr_window, text="検索:", **lbl_config).grid(
-            row=0, column=0, padx=10, pady=15, sticky="e"
-        )
-        tk.Label(self.fr_window, text="置換:", **lbl_config).grid(
-            row=1, column=0, padx=10, pady=5, sticky="e"
-        )
+        tk.Label(
+            self.fr_window,
+            text="検索:",
+            bg=self.bg_top,
+            fg=self.fg_main,
+            font=self.ui_font,
+        ).grid(row=0, column=0, padx=10, pady=15, sticky="e")
+        tk.Label(
+            self.fr_window,
+            text="置換:",
+            bg=self.bg_top,
+            fg=self.fg_main,
+            font=self.ui_font,
+        ).grid(row=1, column=0, padx=10, pady=5, sticky="e")
 
-        entry_config: dict[str, Any] = {
-            "bg": self.bg_main,
-            "fg": self.fg_main,
-            "insertbackground": "#FFFFFF",
-            "bd": 0,
-            "font": self.ui_font,
-        }
-        find_entry = tk.Entry(self.fr_window, **entry_config)
+        find_entry = tk.Entry(
+            self.fr_window,
+            bg=self.bg_main,
+            fg=self.fg_main,
+            insertbackground="#FFFFFF",
+            bd=0,
+            font=self.ui_font,
+        )
         find_entry.grid(row=0, column=1, padx=5, pady=15, sticky="we", ipadx=5, ipady=3)
-        replace_entry = tk.Entry(self.fr_window, **entry_config)
+        replace_entry = tk.Entry(
+            self.fr_window,
+            bg=self.bg_main,
+            fg=self.fg_main,
+            insertbackground="#FFFFFF",
+            bd=0,
+            font=self.ui_font,
+        )
         replace_entry.grid(row=1, column=1, padx=5, pady=5, sticky="we", ipadx=5, ipady=3)
 
         btn_frame = tk.Frame(self.fr_window, bg=self.bg_top)
         btn_frame.grid(row=2, column=0, columnspan=2, pady=15)
 
         def find_next() -> None:
+            """Find and highlight next occurrence of query string."""
             query = find_entry.get()
             if not query:
                 return
@@ -350,9 +442,14 @@ class SimpleNotepad(tk.Tk):
                 self.text_area.see(pos)
                 self.text_area.focus()
             else:
-                messagebox.showinfo("検索", "見つかりませんでした。", parent=self.fr_window)  # type: ignore[arg-type]
+                messagebox.showinfo(
+                    "検索",
+                    "見つかりませんでした。",
+                    parent=self.fr_window,  # type: ignore[arg-type]
+                )
 
         def replace_current() -> None:
+            """Replace current highlighted selection if matching query."""
             if not self.text_area.tag_ranges("sel"):
                 find_next()
                 return
@@ -369,6 +466,7 @@ class SimpleNotepad(tk.Tk):
                 find_next()
 
         def replace_all() -> None:
+            """Replace all occurrences of query across the text buffer."""
             query = find_entry.get()
             replacement = replace_entry.get()
             if not query:
@@ -377,32 +475,58 @@ class SimpleNotepad(tk.Tk):
             content = self.text_area.get("1.0", "end-1c")
             new_content, count = TextService.replace_all(content, query, replacement)
             if count == 0:
-                messagebox.showinfo("置換", "見つかりませんでした。", parent=self.fr_window)  # type: ignore[arg-type]
+                messagebox.showinfo(
+                    "置換",
+                    "見つかりませんでした。",
+                    parent=self.fr_window,  # type: ignore[arg-type]
+                )
                 return
 
             self.text_area.delete("1.0", tk.END)
             self.text_area.insert("1.0", new_content)
-            messagebox.showinfo("完了", f"{count} 箇所を置換しました。", parent=self.fr_window)  # type: ignore[arg-type]
+            messagebox.showinfo(
+                "完了",
+                f"{count} 箇所を置換しました。",
+                parent=self.fr_window,  # type: ignore[arg-type]
+            )
             self.update_char_count()
 
-        btn_conf: dict[str, Any] = {
-            "bg": "#3E3E42",
-            "fg": self.fg_main,
-            "bd": 0,
-            "font": self.ui_font,
-            "activebackground": "#505050",
-            "activeforeground": "#FFFFFF",
-            "cursor": "hand2",
-        }
-        tk.Button(btn_frame, text="次を検索", command=find_next, **btn_conf).pack(
-            side="left", padx=5, ipadx=5
-        )
-        tk.Button(btn_frame, text="置換", command=replace_current, **btn_conf).pack(
-            side="left", padx=5, ipadx=5
-        )
-        tk.Button(btn_frame, text="すべて置換", command=replace_all, **btn_conf).pack(
-            side="left", padx=5, ipadx=5
-        )
+        tk.Button(
+            btn_frame,
+            text="次を検索",
+            command=find_next,
+            bg="#3E3E42",
+            fg=self.fg_main,
+            bd=0,
+            font=self.ui_font,
+            activebackground="#505050",
+            activeforeground="#FFFFFF",
+            cursor="hand2",
+        ).pack(side="left", padx=5, ipadx=5)
+        tk.Button(
+            btn_frame,
+            text="置換",
+            command=replace_current,
+            bg="#3E3E42",
+            fg=self.fg_main,
+            bd=0,
+            font=self.ui_font,
+            activebackground="#505050",
+            activeforeground="#FFFFFF",
+            cursor="hand2",
+        ).pack(side="left", padx=5, ipadx=5)
+        tk.Button(
+            btn_frame,
+            text="すべて置換",
+            command=replace_all,
+            bg="#3E3E42",
+            fg=self.fg_main,
+            bd=0,
+            font=self.ui_font,
+            activebackground="#505050",
+            activeforeground="#FFFFFF",
+            cursor="hand2",
+        ).pack(side="left", padx=5, ipadx=5)
 
         find_entry.focus()
 
